@@ -1,0 +1,196 @@
+{% extends 'layout.html' %}
+{% load i18n %}
+
+{% block title %} Admin Dashboard - {% endblock %}
+
+{% block content %}
+
+
+<div id="dashboardapp" class="pcoded-content">
+    <div class="pcoded-inner-content">
+        <div class="main-body">
+            <div class="page-wrapper">
+                <div class="row">
+                    <div class="col-xl-12 col-md-12">
+                        <div class="card Recent-Users">
+                            <div class="card-header pb-0">
+                                <div class="row align-items-center justify-content-center">
+                                    <div class="col">
+                                        <h5 class="m-0"><span class="f-20">{{ count_ordered }}</span> pedidos agendados</h5>
+                                        <div class="btn-group float-right">
+                                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <i class="feather icon-file-text f-26 m-r-10"></i>
+                                            </button>
+                                            <div class="dropdown-menu">
+                                                <a class="dropdown-item" href="{% url 'export-csv' %}">Gerar .CSV</a>
+                                                <a class="dropdown-item" href="#!">Gerar .PDF</a>
+                                            </div>
+                                        </div>
+                                        <form action="{% url 'ordered_products' %}" method="get">
+                                            <div class="col-xl-12 px-0">
+                                                <div class="card-block px-0">
+                                                    <div class="row">
+                                                        <div class="col-xl-12">
+                                                            <h3 class="f-w-300 d-flex align-items-center m-b-0">
+                                                                <i class="feather icon-search f-26 m-r-10" style="color: #888"></i>
+                                                                <input class="form-control" type="text" name="query" value="{{ query|title }}" placeholder="Procurar por pedido ou nome de cliente">
+                                                            </h3>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-block px-0 py-2">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th class="text-center">Pedido</th>
+                                                <th class="text-center">Criado</th>
+                                                <th>Nome</th>
+                                                <th class="text-center">Custo</th>
+                                                <th class="text-center">Status</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for order in orders %}
+                                            <tr class="unread">
+                                                <td><h6 class="m-0 text-center">#{{ order.id }}</h6></td>
+                                                <td><h6 class=" m-0 text-center">{{ order.created_at|date:"d / m / Y" }}</h6></td>
+                                                <td>
+                                                    <h6 class="m-0" style="display: inline">{{ order.first_name }} </h6>
+                                                    <p class="m-0" style="display: inline; vertical-align: center">&#8226; {{ order.phone }}</p>
+                                                </td>
+                                                <td>{% language 'pt-br' %}<p class="text-center m-0">R$ {{ order.paid_amount|floatformat:2 }}</p>{% endlanguage %}</td>
+                                                <td>
+                                                    {% if order.status == 'ordered' %}
+                                                        <h6 class="m-0 text-center text-c-purple" style="font-weight: 600">Agendado</h6>
+                                                    {% elif order.status == 'shipped' %}
+                                                        <h6 class="m-0 text-center text-c-green" style="font-weight: 600">Entregue</h6>
+                                                    {% else %}
+                                                        <h6 class="m-0 text-center text-c-red" style="font-weight: 600">Cancelado</h6>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <i class="m-0 feather icon-chevron-down text-c-pink f-26 m-r-10" data-toggle="collapse" data-target="#demo-{{order.id}}" style="cursor: pointer"></i>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="p-0" colspan="6" style="border: none">
+                                                    <div id="demo-{{order.id}}" class="collapse table-responsive" style="background-color: #eee">
+                                                        <table class="table table-hover">
+                                                            <thead style="background-color: #eee">
+                                                                <tr>
+                                                                    <th class="text-center" colspan="2">Informações</th>
+                                                                    <th class="text-center" colspan="3">Resumo</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody style="background-color: #eee">
+                                                                <tr>
+                                                                    <td></td>
+                                                                    <td>
+                                                                        <p><span style="font-weight:600">Nome:</span> {{ order.first_name|title }}</p>
+                                                                        <p><span style="font-weight:600">E-mail:</span> {{ order.email|lower }}</p>
+                                                                        <p><span style="font-weight:600">Celular:</span> {{ order.phone }}</p>
+                                                                        <p><span style="font-weight:600">Endereço:</span> {{ order.address|lower|capfirst }}</p>
+                                                                        <p><span style="font-weight:600">CEP:</span> {{ order.zipcode }}</p>
+                                                                        <p><span style="font-weight:600">Bairro:</span> {{ order.place }}</p>
+
+                                                                    </td>
+                                                                    <td></td>
+                                                                    <td style="vertical-align: top">
+                                                                        {% for item in order.items.all %}
+                                                                            <p><span style="font-weight: 600">{{ item.quantity }}x</span> {{ item.product.title }}</p>
+                                                                        {% endfor %}
+
+                                                                        {% language 'pt-br' %}
+                                                                            <p class="mt-4"><span style="font-weight:600">R$ {{ order.paid_amount|floatformat:2 }}</span></p>
+                                                                            <p><span style="font-weight:600">Entrega: {{ order.delivered_at|date:"d / m / Y" }}</span></p>
+                                                                        {% endlanguage %}
+
+                                                                    </td>
+                                                                    <td></td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+
+                                                </td>
+                                            </tr>
+
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var dashboardapp = new Vue({
+        el: '#dashboardapp',
+        delimiters: ['[[', ']]'],
+        data () {
+            return {
+
+            }
+        },
+        methods: {
+            statusShipped(order_id) {
+                var data = {
+                    'order_id': order_id,
+                };
+
+            console.log('clicouu')
+            fetch('/api/status_shipped/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(data)
+                })
+                .then((response) => {
+                    location.reload()
+                })
+                .catch(function (error) {
+                    console.log('Erro: ', error);
+                })
+            },
+            statusOrdered(order_id) {
+                var data = {
+                    'order_id': order_id,
+                };
+
+            fetch('/api/status_ordered/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(data)
+                })
+                .then((response) => {
+                    location.reload()
+                })
+                .catch(function (error) {
+                    console.log('Erro: ', error);
+                })
+            }
+        }
+    });
+</script>
+{% endblock %}

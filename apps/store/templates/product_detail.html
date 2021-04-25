@@ -1,0 +1,606 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{product.title}} -{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="https://unpkg.com/vue-agile/dist/VueAgile.css">
+    <link rel="stylesheet" href="{% static 'css/vue.agile.css'%}">
+{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="columns">
+            <div class="column is-6">
+                <div id="carousel">
+                    <agile class="main" ref="main" :options="options1" :as-nav-for="asNavFor1">
+                        <div class="slide" v-for="(image, i) in images" :key="i" :class="`slide--${i}`">
+                            <figure class="image is 5by3 mb-2">
+                                <img :src="image.image"/>
+                            </figure>
+
+                        </div>
+                        <template slot="prevButton"><i class="fas fa-paw"></i></template>
+                        <template slot="nextButton"><i class="fas fa-paw"></i></template>
+                    </agile>
+                    <agile class="thumbnails" ref="thumbnails" :options="options2" :as-nav-for="asNavFor2">
+                        <div class="slide slide--thumbniail" v-for="(image, i) in images" :key="i" :class="`slide--${i}`" @click="$refs.thumbnails.goTo(i)">
+                            <img class="image is 5by3" :src="image.thumbnail"/>
+                        </div>
+                    </agile>
+                </div>
+
+                <div id="breadcrumb">
+                    <a href="{% url 'category_detail' product.category.slug %}">
+                        <div class="bread">
+                            <i class="fas fa-chevron-left mr-2" style="color: #fdc6e1; display: inline"></i>
+                            <p class="m-0 p-0" style="display: inline">
+                                Voltar ao cardápio
+                            </p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <div id="productapp" class="column is-6 phonebox">
+                <h1 class="mobile mb-2">{{ product.title }}</h1>
+
+                <div id="ratings" class="mb-2">
+                    {% if product.get_rating == 0 %}
+                        <b-rate v-model="rate"
+                            :icon-pack="packs"
+                            :icon="icons"
+                            :max="maxs"
+                            :size="sizes"
+                            :spaced="isSpaced"
+                            :disabled="isDisabled">
+                        </b-rate>
+                    {% else %}
+                        <b-rate v-model="rate"
+                            :icon-pack="packs"
+                            :icon="icons"
+                            :max="maxs"
+                            :size="sizes"
+                            :spaced="isSpaced"
+                            :disabled="isDisabled">
+                        </b-rate>
+                    {% endif %}
+                </div>
+
+                <div id="price">
+                    <div v-if="spoonPrice != ''">
+                        <p class="title is-4" style="color: #fdc6e1">R$ [[ spoonPrice | formatQuantity ]]</p>
+                    </div>
+                    <div v-else>
+                        <p class="title is-4" style="color: #fdc6e1">R$ {{ product.price|floatformat:0 }},00</p>
+                    </div>
+                </div>
+
+                <div id="description" style="margin-top: 1em">
+                    {% if product.description %}
+                        <p> {{ product.description }} </p>
+                    {% endif %}
+                </div>
+
+                <div style="margin-top: 2em">
+                    {% if product.num_available > 0 %}
+                        {% if product.variants.all %}
+                            <div class="columns is-multiline">
+                            {% for variant in product.variants.all %}
+                                {% if variant.spoon.num_available > 0 %}
+                                    <input @click="spoon = {{ variant.id }}; spoonDescription = '{{ variant.description }}'; spoonPrice = {{ variant.price }}; spoonNum_available = {{ variant.spoon.num_available }}" type="radio" id="{{ variant.id }}" name="radio" />
+                                    <label for="{{ variant.id }}">
+                                        <img src="{{ variant.image.url }}" alt="" />
+                                    </label>
+                                {% endif %}
+                            {% endfor %}
+                            </div>
+                            <p class="mb-0 pb-0"><strong style="color: #AAA">Opção selecionada: </strong></p>
+                            <p v-if="spoonDescription" class="m-0 pt-2">[[ spoonDescription ]]</p>
+                        {% endif %}
+                        <b-field  class="mt-4">
+                            <div>
+                                <b-numberinput
+                                    class="mr-5"
+                                    v-model="quantity"
+                                    :editable="false"
+                                    :min="min"
+                                    :max="max"
+                                    controls-position="compact"
+                                    controls-rounded>
+                                </b-numberinput>
+                            </div>
+                            <div id="buyProduct">
+                                <button type="submit" class="button" @click="addToCart([[ spoon ]])">
+                                    <i class="fas fa-paw pr-2" style="color: white"></i>
+                                    Comprar
+                                </button>
+                            </div>
+                        </b-field>
+                        <div class="is-secondary" v-if="showProductError">
+                            <p class="m-0 p-0" style="color: red">Selecione um produto acima para continuar a compra</p>
+                        </div>
+                    {% else %}
+                        <p class="m-0 p-0" style="color: red">
+                            Desculpe, produto indisponível no momento
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div id="tabs" class="">
+            <div class="column is-12">
+                <div>
+                    <b-tabs v-model="activeTab">
+
+                        <b-tab-item label="ALÉRGENOS">
+                            <p>
+                                <span style="color: #AAA; font-weight: 500">
+                                     Aviso:
+                                </span>
+                                Os seguintes alérgenos estão presentes em nossa cozinha: glúten, ovo, amendoim, soja,
+                                leite, nozes e aveia, por esta razão, embora todos os cuidados sejam tomados
+                                para minimizar a contaminação cruzada, elas podem ocorrer.
+                            </p>
+
+                            {% if product.ingredients %}
+                            <p>
+                                <span style="color: #AAA; font-weight: 500">
+                                     Ingredientes do {{ product.title }}:
+                                </span>
+                                {{ product.ingredients }}
+                            </p>
+                            {% endif %}
+
+                            <div style="margin-top: 2em">
+                                <a class="anchors"  href="{% url 'allergens' %}">
+                                    <i class="fas fa-paw pr-2"></i>
+                                    Veja todos os sabores e seus ingredientes.
+                                </a>
+                            </div>
+
+
+                        </b-tab-item>
+
+                        <b-tab-item label="RELACIONADOS">
+                            {% if related_products %}
+                            <div class="columns is-multiline">
+                                {% for product in related_products %}
+                                    <div class="column is-3 pl-0 mt-4">
+                                        <div id="card" class="card">
+                                            <div class="card-image">
+                                                <figure class="">
+                                                    <a href="{% url 'product_detail' product.category.slug product.slug %}">
+                                                        <img src="{{ product.image.url }}" alt="{{ product.title }}">
+                                                    </a>
+                                                </figure>
+                                            </div>
+                                            <div class="card-content">
+                                                <div class="media">
+                                                    <div class="media-content">
+                                                        <p class="has-text-centered m-0 p-0">{{ product.title }}</p>
+                                                        <p class="has-text-centered m-0 p-0" style="color: #AAA">A partir de R$ {{ product.price|floatformat:0 }},00</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                                <div class="has text-centered">
+                                    <p>Não há produtos relacionados no momento.</p>
+                                </div>
+                            {% endif %}
+                        </b-tab-item>
+
+                        <b-tab-item label="AVALIAÇÕES">
+                            <div class="columns mt-2">
+                                <div class="column is-3">
+                                    {% if request.user.is_authenticated %}
+                                        <form method="post" action=".">
+                                            {% csrf_token %}
+                                            <p>Sua opinião é muito importante! Compartilhe o que você achou:</p>
+                                            <div class="control has-addons">
+                                                <p style="display: inline; line-height: 40px">Sua nota:</p>
+                                                <div class="select mb-3">
+                                                    <select name="stars">
+                                                        <option value="1">1</option>
+                                                        <option value="2">2</option>
+                                                        <option value="3">3</option>
+                                                        <option value="4">4</option>
+                                                        <option value="5" selected>5</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="field is-extended">
+                                                <div class="control">
+                                                    <textarea
+                                                        class="textarea"
+                                                        name="content"
+                                                        placeholder="Escreva aqui seu comentário"
+                                                        v-model="comment">
+                                                    </textarea>
+                                                </div>
+                                            </div>
+                                            <div class="field">
+                                                <div id="comment" class="control">
+                                                    <button v-bind:disabled="comment === ''" type="submit" class="button">
+                                                        <i class="fas fa-paw pr-2" style="color: white"></i>
+                                                        Enviar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    {% else %}
+                                        <p class="has-text-centered">
+                                            Por favor,
+                                            <a href="{% url 'login' %}?next={{request.path}}">entre em  sua conta</a>
+                                            para realizar avaliações de nossos produtos.
+                                        </p>
+                                    {% endif %}
+                                </div>
+                                <div class="column is-9">
+                                    <div class="columns is-multiline is-vcentered p-0">
+                                        {% for review in product.reviews.all %}
+                                            <div class="column is-4">
+                                                <div class="card mb-2">
+                                                    <div class="card-content">
+                                                        <div class="content has-text-centered" style="align-items: center">
+                                                            <p class="m-0 mb-2 p-0">{{ review.content }}</p>
+                                                            <div class="buttons" style="align-text: center; width: 100%; display: inline; color: #fdc6e1">
+                                                                {% if review.stars == 1 %}
+                                                                    <i class="fas fa-paw pl-1"></i>
+                                                                {% elif review.stars == 2 %}
+                                                                    <i class="fas fa-paw pl-1"></i><i class="fas fa-paw pl-1"></i>
+                                                                {% elif review.stars == 3 %}
+                                                                    <i class="fas fa-paw pl-1"></i><i class="fas fa-paw pl-1"></i><i class="fas fa-paw pl-1"></i>
+                                                                {% elif review.stars == 4 %}
+                                                                    <i class="fas fa-paw pl-1"></i><i class="fas fa-paw pl-1"></i><i class="fas fa-paw pl-1"></i><i class="fas fa-paw pl-1"></i>
+                                                                {% else %}
+                                                                    <i class="fas fa-paw pl-1"></i><i class="fas fa-paw pl-1"></i><i class="fas fa-paw pl-1"></i><i class="fas fa-paw pl-1"></i><i class="fas fa-paw pl-1"></i>
+                                                                {% endif %}
+                                                            </div>
+                                                            <p class="m-0 mt-2 p-0" style="color: #AAA">
+                                                                {{ review.user|title }}, em {{ review.date_added|date:"d/m/Y" }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% empty %}
+                                            <p class="has-text-centered">Nenhuma avaliação :(</p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </b-tab-item>
+                    </b-tabs>
+                </div>
+
+            </div>
+        </div>
+        <div id="warning">
+            <section>
+                <button class="infos" @click="allergens = true">
+                    <p class="m-0 p-0">Aviso aos alérgicos</p>
+                    <i class="fas fa-paw fa-sm"></i>
+                </button>
+                <button class="infos" @click="related = true">
+                    <p class="m-0 p-0">Veja os produtos relacionados</p>
+                    <i class="fas fa-paw fa-sm"></i>
+                </button>
+                <button class="infos" @click="ratings = true">
+                    <p class="m-0 p-0">Veja todas avaliações</p>
+                    <i class="fas fa-paw fa-sm"></i>
+                </button>
+
+                <b-modal v-model="allergens" full-screen>
+                    <div class="modal-card" style="width: auto">
+                        <section class="modal-card-body">
+                            <h1 class="mb-2">Alérgenos:</h1>
+                            <p><strong style="color: #AAA">Ingredientes: </strong>{{ product.ingredients }}</p>
+                            <p><strong style="color: #AAA">Aviso: </strong>Os seguintes alérgenos estão presentes em nossa cozinha: glúten, ovo, amendoim, soja, leite, nozes e aveia, por esta razão, embora todos os cuidados sejam tomados para minimizar a contaminação cruzada, elas podem ocorrer.</p>
+                            <div style="margin-top: 2em">
+                                <a class="anchors"  href="{% url 'allergens' %}">
+                                    <i class="fas fa-paw pr-2"></i>
+                                    Veja todos os alérgenos presentes.
+                                </a>
+                            </div>
+                        </section>
+                    </div>
+                </b-modal>
+
+                <b-modal v-model="related" full-screen>
+                    <div class="modal-card" style="width: auto">
+                        <section class="modal-card-body">
+                            <h1 class="mb-2">Relacionados:</h1>
+
+                            {% if related_products %}
+                            <div class="columns is-multiline">
+                                {% for product in related_products %}
+                                    <div class="column is-3 pl-0 mt-4">
+                                        <div id="card" class="card">
+                                            <div class="card-image">
+                                                <figure class="">
+                                                    <a href="{% url 'product_detail' product.category.slug product.slug %}">
+                                                        <img src="{{ product.image.url }}" alt="{{ product.title }}">
+                                                    </a>
+                                                </figure>
+                                            </div>
+                                            <div class="card-content">
+                                                <div class="media">
+                                                    <div class="media-content">
+                                                        <p class="has-text-centered m-0 p-0">{{ product.title }}</p>
+                                                        <p class="has-text-centered m-0 p-0" style="color: #AAA">A partir de R$ {{ product.price|floatformat:0 }},00</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                                <div class="has text-centered">
+                                    <p>Não há produtos relacionados no momento.</p>
+                                </div>
+                            {% endif %}
+                        </b-tab-item>
+                        </section>
+                    </div>
+                </b-modal>
+
+                <b-modal v-model="ratings" full-screen>
+                    <div class="modal-card" style="width: auto">
+                        <section class="modal-card-body">
+                            <h1 class="mb-2">Avaliações:</h1>
+
+                            {% if request.user.is_authenticated %}
+                                <form method="post" class="mb-4" action=".">
+                                    {% csrf_token %}
+                                    <p>Sua opinião é muito importante! Compartilhe o que você achou:</p>
+                                    <div class="control has-addons">
+                                        <p style="display: inline; line-height: 40px">Sua nota:</p>
+                                        <div class="select mb-3">
+                                            <select name="stars">
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                                <option value="3">3</option>
+                                                <option value="4">4</option>
+                                                <option value="5" selected>5</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="field is-extended">
+                                        <div class="control">
+                                            <textarea class="textarea" name="content" placeholder="Escreva aqui seu comentário" v-model="commentMobile"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="field has-addons has-addons-centered">
+                                        <div id="comment" class="control">
+                                            <button v-bind:disabled="commentMobile === ''" type="submit" class="button">
+                                                <i class="fas fa-paw pr-2" style="color: white"></i>
+                                                Enviar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            {% else %}
+                                <p class="has-text-centered">Por favor, <a style="color: #fdc6e1" href="{% url 'login' %}?next={{request.path}}"> entre em  sua conta</a> para realizar avaliações de nossos produtos.</p>
+                            {% endif %}
+
+                            <div class="reviews-wrapper mt-4">
+                                {% for review in product.reviews.all %}
+                                    <div class="card mb-2">
+                                        <div class="card-content">
+                                            <div class="content has-text-centered" style="align-items: center">
+                                                <p class="m-0 mb-2 p-0">{{ review.content }}</p>
+                                                <div class="buttons" style="align-text: center; width: 100%; display: inline; color: #fdc6e1">
+                                                    {% if review.stars == 1 %}
+                                                        <i class="fas fa-paw pl-1"></i>
+                                                    {% elif review.stars == 2 %}
+                                                        <i class="fas fa-paw pl-1"></i><i class="fas fa-paw pl-1"></i>
+                                                    {% elif review.stars == 3 %}
+                                                        <i class="fas fa-paw pl-1"></i><i class="fas fa-paw pl-1"></i><i class="fas fa-paw pl-1"></i>
+                                                    {% elif review.stars == 4 %}
+                                                        <i class="fas fa-paw pl-1"></i><i class="fas fa-paw pl-1"></i><i class="fas fa-paw pl-1"></i><i class="fas fa-paw pl-1"></i>
+                                                    {% else %}
+                                                        <i class="fas fa-paw pl-1"></i><i class="fas fa-paw pl-1"></i><i class="fas fa-paw pl-1"></i><i class="fas fa-paw pl-1"></i><i class="fas fa-paw pl-1"></i>
+                                                    {% endif %}
+                                                </div>
+                                                <p class="m-0 mt-2 p-0" style="color: #AAA">
+                                                    {{ review.user|title }}, em {{ review.date_added|date:"d/m/Y" }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% empty %}
+                                    <hr class ="mt-6 mb-6" style="color: #999">
+                                    <p class="m-0 p-0 has-text-centered">Nenhuma avaliação :(</p>
+                                {% endfor %}
+                            </div>
+                        </section>
+                    </div>
+                </b-modal>
+            </section>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'js/vueagile.umd.min.js' %}"></script>
+    <script>
+        carousel = new Vue({
+            el: '#carousel',
+            components: {
+                agile: VueAgile,
+            },
+            data () {
+                return {
+                    images: [{{ imagesstring|safe }}],
+                    asNavFor1: [],
+                    asNavFor2: [],
+                    options1: {
+                        dots: false,
+                        fade: false,
+                        navButtons: true
+                    },
+
+                    options2: {
+                        autoplay: false,
+                        centerMode: false,
+                        dots: false,
+                        navButtons: false,
+                        slidesToShow: 3,
+                        infinite: true,
+                        responsive: [
+                            {
+                                breakpoint: 600,
+                                settings: {
+                                    slidesToShow: 4,
+                                    navButtons: true
+                                }
+                            },
+                            {
+                                breakpoint: 1000,
+                                settings: {
+                                    slidesToShow: 4,
+                                    navButtons: false
+                                }
+                            }
+                        ]
+
+                    },
+                }
+            },
+            mounted () {
+                this.asNavFor1.push(this.$refs.thumbnails)
+                this.asNavFor2.push(this.$refs.main)
+            }
+        })
+    </script>
+    <script>
+        var ratings = new Vue({
+            el: '#ratings',
+            delimiters: ['[[', ']]'],
+            data () {
+                return {
+                    rate: '{{ product.get_rating }}',
+                    maxs: 5,
+                    sizes: 'is-small',
+                    packs: 'mdi',
+                    icons: 'paw',
+                    isSpaced: true,
+                    isDisabled: true,
+                }
+            }
+        });
+    </script>
+    <script>
+        var productapp = new Vue({
+            el: '#productapp',
+            delimiters: ['[[', ']]'],
+            store: store,
+            data () {
+                return {
+                    images: [{{ imagesstring|safe }}],
+                    products: [{{ productsstring|safe }}],
+                    spoon: '',
+                    spoonDescription: '',
+                    spoonNum_available: '',
+                    spoonPrice: '',
+                    activeTab: 0,
+                    indefinteToast: null,
+                    quantity: 1,
+                    min: 1,
+                    max: 1,
+                    showProductError: false,
+                }
+            },
+            filters: {
+                formatQuantity (value) {
+                    let val = (value/1).toFixed(2).replace('.', ',');
+                    return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                }
+            },
+            methods: {
+                toast() {
+                    this.$buefy.toast.open({
+                        duration: 2000,
+                        message: `Produto adicionado ao carrinho! <i class="fas fa-paw pl-2" style="color: #fdc6e1"></i>`,
+                        position: 'is-bottom',
+                        type: 'is-black'
+                    })
+                },
+                addToCart(product_id) {
+                    var data = {
+                        'product_id': this.spoon,
+                        'update': true,
+                        'quantity': this.quantity,
+                    };
+
+                    if (product_id == '') {
+                        this.showProductError = true;
+                    } else {
+                        fetch('/api/add_to_cart/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            credentials: 'same-origin',
+                            body: JSON.stringify(data)
+                        })
+                        .then((response) => {
+                            store.commit('increment', 1);
+                        })
+                        .then((response) => {
+                            return response.json();
+                        })
+                        .catch(function (error) {
+                            console.log('Error: ', error);
+                        })
+                        .then(function() {
+                            return location.href="/carrinho/"
+                        })
+                    }
+                }
+            }
+        });
+    </script>
+    <script>
+        var warning = new Vue({
+            el: '#warning',
+            delimiters: ['[[', ']]'],
+            data () {
+                return {
+                    allergens: false,
+                    related: false,
+                    ratings: false,
+                    description: false,
+                    commentMobile: '',
+                }
+            }
+        });
+    </script>
+    <script>
+        var tabs = new Vue({
+            el: '#tabs',
+            delimiters: ['[[', ']]'],
+            store: store,
+            data () {
+                return {
+                    images: [{{ imagesstring|safe }}],
+                    products: [{{ productsstring|safe }}],
+                    activeTab: 0,
+                    showBooks: false,
+                    comment: '',
+                    showCommentError: false,
+                }
+            },
+            });
+    </script>
+{% endblock %}

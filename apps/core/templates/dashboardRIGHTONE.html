@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %} Admin Dashboard - {% endblock %}
+
+{% block content %}
+<section class="section" style="background-color: #FAFAFA">
+    <div class="container">
+        <div class="categoryTitle mb-4">
+        </div>
+
+        <nav class="level container is-mobile">
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Pedidos</p>
+                    <p class="title m-0">{{ count_orders }}</p>
+                </div>
+            </div>
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Entregues</p>
+                    <p class="title m-0" style="color: green">{{ count_shipped }}</p>
+                </div>
+            </div>
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Em andamento</p>
+                    <p class="title m-0" style="color: orange">{{ count_ordered }}</p>
+                </div>
+            </div>
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Excel</p>
+                    <p><a href="{% url 'export-csv' %}" class="icon solid fa-file fa-2x" style="cursor: pointer"></a></p>
+                </div>
+            </div>
+        </nav>
+
+        <div class="columns">
+            <form class="column pr-0 pl-0" action="{% url 'dashboard' %}" method="get">
+                <nav class="level">
+                    <div class="level-left">
+                        <div class="field has-addons">
+                            <div id="dashboard" class="control has-icons-left" style="width: 420px">
+                                <input class="input" type="text" name="query" value="{{ query|title }}" placeholder="Procurar por pedido ou nome de cliente">
+                                <span class="icon is-small is-left">
+                                  <i class="fas fa-search"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="level-right">
+                        <div class="control">
+                            <div class="select">
+                                <select class="sorting" name="sorting">
+                                    <option value="-created_at"{% if sorting == '-created_at' %} selected{% endif %}>Recentes</option>
+                                    <option value="-delivered_at"{% if sorting == '-delivered_at' %} selected{% endif %}>Entregas próximas</option>
+                                    <!--<option value="-price"{% if sorting == '-price' %} selected{% endif %}>Preço decrescente</option>-->
+
+                                </select>
+                            </div>
+                            <button class="button is-success" name="button">Procurar</button>
+                        </div>
+                    </div>
+                </nav>
+            </form>
+        </div>
+
+
+        <div id="dashboardapp" class="columns is-multiline mb-4">
+        {% for order in orders %}
+            <div class="column is-4 p-1">
+                <b-collapse class="card" animation="slide" aria-id="contentIdForA11y3" :open="false">
+                    <template #trigger="props">
+                    {% if order.status == 'shipped' %}
+                        <div class="card-header p-4" role="button" aria-controls="contentIdForA11y3" style="background-color: #b6d7a8">
+                    {% else %}
+                        <div class="card-header p-4" role="button" aria-controls="contentIdForA11y3">
+                    {% endif %}
+                            <p class="card-header-title m-0 pl-0" style="font-weight: 400">Pedido #{{ order.id }} - {{ order.created_at|date:"d/m/Y" }}</p>
+                            <a class="card-header-icon">
+                                <b-icon :icon="props.open ? 'menu-down' : 'menu-up'"></b-icon>
+                            </a>
+                        </div>
+                    </template>
+
+                    <div class="card-content p-0">
+                        <div class="content p-4 m-0">
+                            <p class="m-0 pb-1">Nome: {{ order.first_name }}</p>
+                            <p class="m-0 pb-1">E-mail: {{ order.email }}</p>
+                            <p class="m-0 pb-1">Celular: {{ order.phone }}</p>
+                            <p class="m-0 pb-1">Endereço: {{ order.address|title }}</p>
+                            <p class="m-0 pb-1">CEP: {{ order.zipcode }}</p>
+                            <p class="m-0 pb-1">Bairro: {{ order.place }}</p>
+                        </div>
+                        <hr class="m-1" style="color: #fdc6e1">
+                        <div class="content p-4 m-0">
+                            {% for item in order.items.all %}
+                                <p class="m-0"><span style="font-weight: 600">{{ item.quantity }}x</span> {{ item.product.title }}</p>
+                            {% endfor %}
+
+                            <div class="level mt-0">
+                                <div class="level-left has-text-left">
+                                    <p><span style="font-weight: 600">R$ {{ order.paid_amount }}</span></p>
+                                </div>
+                                <div class="level-left has-text-left">
+                                    <p>Entrega: <span style="font-weight: 600">{{ order.delivered_at|date:"d/m/Y" }}</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <footer class="card-footer">
+                        <a @click="statusShipped({{ order.id }})" class="card-footer-item">Entregue</a>
+                        <a @click="statusOrdered({{ order.id }})" class="card-footer-item">Agendado</a>
+                    </footer>
+                </b-collapse>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var dashboardapp = new Vue({
+        el: '#dashboardapp',
+        delimiters: ['[[', ']]'],
+        data () {
+            return {
+
+            }
+        },
+        methods: {
+            statusShipped(order_id) {
+                var data = {
+                    'order_id': order_id,
+                };
+
+            console.log('clicouu')
+            fetch('/api/status_shipped/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(data)
+                })
+                .then((response) => {
+                    location.reload()
+                })
+                .catch(function (error) {
+                    console.log('Erro: ', error);
+                })
+            },
+            statusOrdered(order_id) {
+                var data = {
+                    'order_id': order_id,
+                };
+
+            fetch('/api/status_ordered/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(data)
+                })
+                .then((response) => {
+                    location.reload()
+                })
+                .catch(function (error) {
+                    console.log('Erro: ', error);
+                })
+            }
+        }
+    });
+</script>
+{% endblock %}

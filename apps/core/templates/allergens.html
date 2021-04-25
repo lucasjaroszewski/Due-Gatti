@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %} Alérgicos - {% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="categoryTitle mb-4">
+            <h1>Alérgenos</h1>
+        </div>
+        <div class="table table_wrapper mb-6">
+            <table id="tableCart">
+                <thead>
+                    <tr>
+                        <td>Nome</td>
+                        <td class="has-text-centered">Glúten</td>
+                        <td class="has-text-centered">Ovo</td>
+                        <td class="has-text-centered">Amendoim</td>
+                        <td class="has-text-centered">Soja</td>
+                        <td class="has-text-centered">Leite</td>
+                        <td class="has-text-centered">Nozes</td>
+                        <td class="has-text-centered">Aveia</td>
+                    </tr>
+                </thead>
+                <tbody >
+                    {% for allergen in allergens %}
+                    <tr>
+                        <td><a href="{% url 'product_detail' allergen.category.slug allergen.slug %}">{{ allergen.title }}</a></td>
+                        <td class="has-text-centered">{% if allergen.gluten %}<i class="fas fa-check" style="color: #AAA"></i>{% endif %}</td>
+                        <td class="has-text-centered">{% if allergen.eggs %}<i class="fas fa-check" style="color: #AAA"></i>{% endif %}</td>
+                        <td class="has-text-centered">{% if allergen.peanuts %}<i class="fas fa-check" style="color: #AAA"></i>{% endif %}</td>
+                        <td class="has-text-centered">{% if allergen.soya %}<i class="fas fa-check" style="color: #AAA"></i>{% endif %}</td>
+                        <td class="has-text-centered">{% if allergen.milk %}<i class="fas fa-check" style="color: #AAA"></i>{% endif %}</td>
+                        <td class="has-text-centered">{% if allergen.nuts %}<i class="fas fa-check" style="color: #AAA"></i>{% endif %}</td>
+                        <td class="has-text-centered">{% if allergen.oats %}<i class="fas fa-check" style="color: #AAA"></i>{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

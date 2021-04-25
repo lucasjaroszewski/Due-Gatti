@@ -1,0 +1,67 @@
+    <nav class="pcoded-navbar">
+        <div class="navbar-wrapper">
+            <div class="navbar-brand header-logo">
+                <a target="_blank" href="{% url 'frontpage' %}" class="b-brand">
+                    <span class="b-title">Due Gatti</span>
+                </a>
+            </div>
+            <div class="navbar-content scroll-div">
+                <ul class="nav pcoded-inner-navbar">
+                    <li class="nav-item pcoded-menu-caption">
+                        <label>Resumo</label>
+                    </li>
+                    <li data-username="dashboard Default Ecommerce CRM Analytics Crypto Project"
+                        class="nav-item {% if 'index' in segment %} active {% endif %}">
+                        <a href="{% url 'dashboard' %}" class="nav-link "><span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Dashboard</span></a>
+                    </li>
+                    <li class="nav-item pcoded-menu-caption">
+                        <label>Loja</label>
+                    </li>
+                    <li data-username="basic components Button Alert Badges breadcrumb Paggination progress Tooltip popovers Carousel Cards Collapse Tabs pills Modal Grid System Typography Extra Shadows Embeds" class="nav-item pcoded-hasmenu">
+                        <a href="javascript:" class="nav-link "><span class="pcoded-micon"><i class="feather icon-box"></i></span><span class="pcoded-mtext">Criar</span></a>
+                        <ul class="pcoded-submenu">
+                            <li class=""><a href="#" class="">Categoria</a></li>
+                            <li class=""><a href="#" class="">Produto</a></li>
+                            <li class=""><a href="#" class="">Imagem de produtos</a></li>
+                            <li class=""><a href="#" class="">Adicional de produtos</a></li>
+                            <li class=""><a href="#" class="">Gato</a></li>
+                        </ul>
+                    </li>
+                    <li data-username="basic components Button Alert Badges breadcrumb Paggination progress Tooltip popovers Carousel Cards Collapse Tabs pills Modal Grid System Typography Extra Shadows Embeds" class="nav-item pcoded-hasmenu">
+                        <a href="javascript:" class="nav-link "><span class="pcoded-micon"><i class="feather icon-box"></i></span><span class="pcoded-mtext">Modificar</span></a>
+                        <ul class="pcoded-submenu">
+                            <li class=""><a href="#" class="">Categorias</a></li>
+                            <li class=""><a href="#" class="">Produtos</a></li>
+                            <li class=""><a href="#" class="">Imagens de produtos</a></li>
+                            <li class=""><a href="#" class="">Adicionais de produtos</a></li>
+                            <li class=""><a href="#" class="">Gatos</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item pcoded-menu-caption">
+                        <label>Relatórios</label>
+                    </li>
+                    <li data-username="basic components Button Alert Badges breadcrumb Paggination progress Tooltip popovers Carousel Cards Collapse Tabs pills Modal Grid System Typography Extra Shadows Embeds" class="nav-item pcoded-hasmenu">
+                        <a href="javascript:" class="nav-link "><span class="pcoded-micon"><i class="feather icon-file-text"></i></span><span class="pcoded-mtext">Pedidos</span></a>
+                        <ul class="pcoded-submenu">
+                            <li class=""><a href="{% url 'ordered_products' %}" class="">Agendados</a></li>
+                            <li class=""><a href="{% url 'shipped_products' %}" class="">Entregues</a></li>
+                        </ul>
+                    </li>
+                    <li data-username="form elements advance componant validation masking wizard picker select"
+                        class="nav-item {% if 'ui-forms' in segment %} active {% endif %}">
+                        <a href="{% url 'users_list' %}" class="nav-link ">
+                            <span class="pcoded-micon"><i class="feather icon-user"></i></span>
+                            <span class="pcoded-mtext">Usuários</span>
+                        </a>
+                    </li>
+                    <li data-username="form elements advance componant validation masking wizard picker select"
+                        class="nav-item {% if 'ui-forms' in segment %} active {% endif %}">
+                        <a href="/ui-forms.html" class="nav-link ">
+                            <span class="pcoded-micon"><i class="feather icon-trending-up"></i></span>
+                            <span class="pcoded-mtext">Vendas</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>

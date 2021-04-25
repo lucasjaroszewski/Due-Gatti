@@ -1,0 +1,1278 @@
+{% extends 'base.html' %}
+
+{% block title %} Carrinho - {% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<section id="cartapp" class="section">
+    <div id="mobilecart">
+        {% if cart %}
+        <div class="columns" style="text-align: center">
+            <div v-if="products.length > 0">
+                <div id="Step0" class="stepper">
+                    <div class="section">
+                        <h1 class="mt-4">Carrinho</h1>
+
+                        <table id="tableWeb" class="table_wrapper mt-4">
+                            <tbody v-for="product in products">
+                                <tr>
+                                    <td colspan="2" class="has-text-left">
+                                        <a class="button" :href="product.url">
+                                            <strong class="mr-2" style="color: #AAA"> [[ product.quantity ]]x </strong>
+                                            <p class="mr-5">[[ product.title ]]</p>
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="has-text-left">
+                                        <button class="pl-0" @click="removeFromCart(product.id)">
+                                            <i class="fas fa-trash fa-xs pr-2" style="display: inline"></i>
+                                            Remover
+                                        </button>
+                                    </td>
+                                    <td class="has-text-right pb-4">
+                                        <p>
+                                            R$ [[ product.total_price | formatQuantity ]]
+                                        </p>
+                                     </td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr v-if="shipping_value">
+                                    <td class="has-text-left">
+                                        <p style="color: #777" class="mb-2">
+                                            Frete para [[shipping_code]]
+                                        </p>
+                                    </td>
+                                    <td class="has-text-right mb-2">
+                                        <p style="color: #777">
+                                            R$ [[ totalCostWithShipping | formatQuantity ]]
+                                        </p>
+                                    </td>
+                                    <td>
+                                        <p></p>
+                                    </td>
+                                </tr>
+                                <tr v-if="coupon_value">
+                                    <td class="has-text-left">
+                                        <p style="color: #777" class="mb-2">
+                                            Desconto de [[coupon_value]]%
+                                        </p>
+                                    </td>
+                                    <td  class="has-text-right mb-2">
+                                        <p style="color: #777">
+                                            - R$ [[ totalCostWithCoupon | formatQuantity ]]
+                                        </p>
+                                    </td>
+                                    <td>
+                                        <p></p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="has-text-left">
+                                        <p><strong style="color: #AAA">TOTAL</strong></p>
+                                    </td>
+                                    <td class="has-text-right">
+                                        <p><strong style="color: #AAA">R$ [[ fullTotalCost | formatQuantity ]]</strong></p>
+                                    </td>
+                                    <td>
+                                        <p></p>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        <p class="has-text-left mt-6">Tem um cupom? Escreva abaixo:</p>
+                        <div class="field has-addons">
+                            <div class="control has-icons-left">
+                                <input v-on:keyup.enter="applyCoupon()" class="input" style="border: 1px solid #AAA; border-radius: 3.5em" type="text" placeholder="Cupom" v-model="coupon_code">
+                                <span class="icon is-small is-left">
+                                  <i class="fas fa-ticket-alt"></i>
+                                </span>
+                            </div>
+                            <div class="control">
+                                <button type="submit" class="button ml-4" @click="applyCoupon()">
+                                    <i class="fas fa-paw pr-2"></i>
+                                    Aplicar
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="is-secondary" v-if="showCouponError">
+                            <p class="has-text-left" style="color: red">O cupom inserido não é valido!</p>
+                        </div>
+
+                        <div class="btn-box mt-6">
+                            <button @click="checkStep0()" id="Next0">
+                                <i class="fas fa-paw pr-2"></i>
+                                Continuar
+                            </button>
+                        </div>
+                    </div>
+
+                <div id="breadcrumb">
+                    <a href="{% url 'products' %}">
+                        <div class="breadproducts">
+                            <i class="fas fa-chevron-left mr-2" style="color: #fdc6e1; display: inline"></i>
+                            <p class="m-0 p-0" style="display: inline">
+                                Continuar comprando
+                            </p>
+                        </div>
+                    </a>
+                </div>
+                </div>
+
+                <div id="Step1" class="stepper">
+                    <div class="section">
+                        <h1 class="mt-4">Contato</h1>
+                        {% if not request.user.is_authenticated %}
+                            <p class="m-0 mt-2 p-0" style="border-bottom: 2px solid transparent">Continue como convidado ou <a href="{% url 'login' %}" style="color: #4a4a4a; border-bottom: 2px solid #fdc6e1">entre em sua conta.</a></p>
+                        {% endif %}
+
+                        <div class="field has-addons has-addons-centered mt-6">
+                            <div class="control has-icons-left" style="width: 100%">
+                                <input class="input" placeholder="Nome" name="first_name" v-model="first_name">
+                                <span class="icon is-small is-left">
+                                  <i class="fas fa-user"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div v-if="errorName.length">
+                            <p v-for="error in errorName" class="m-0 p-0" style="color: red">[[ error ]]</p>
+                        </div>
+
+                        <div class="field has-addons has-addons-centered">
+                            <div class="control has-icons-left"  style="width: 100%">
+                                <input class="input" type="text" v-mask="'(##) #####-####'" placeholder="Celular" name="phone" v-model="phone">
+                                <span class="icon is-small is-left">
+                                  <i class="fas fa-mobile"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div v-if="errorPhone.length">
+                            <p v-for="error in errorPhone" class="m-0 p-0" style="color: red">[[ error ]]</p>
+                        </div>
+
+                        <div class="field has-addons has-addons-centered">
+                            <div class="control has-icons-left"  style="width: 100%">
+                                <input class="input" type="email" placeholder="E-mail" name="email" v-model="email">
+                                <span class="icon is-small is-left">
+                                  <i class="fas fa-envelope"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div v-if="errorEmail.length">
+                            <p v-for="error in errorEmail" class="m-0 p-0" style="color: red">[[ error ]]</p>
+                        </div>
+
+                        <div class="btn-box mt-6">
+                            <button @click="backStep0()" class="mr-4">
+                                <i class="fas fa-paw pr-2"></i>
+                                Voltar
+                            </button>
+                            <button @click="checkStep1()" class="ml-4">
+                                <i class="fas fa-paw pr-2"></i>
+                                Continuar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="Step2" class="stepper">
+                    <div class="section">
+                        <h1 class="mt-4">Entrega</h1>
+
+                        <div class="field">
+                            <div class="control">
+                                <v-date-picker class="inline-block"
+                                    :locale="{ id: 'pt', firstDayOfWeek: 1}"
+                                    :min-date="new Date()"
+                                    :disabled-dates="[{ start: new Date(), span: 4 }, { weekdays: [1] }]"
+                                    :model-config="modelConfig"
+                                    color="pink"
+                                    v-model="delivered_at">
+                                </v-date-picker>
+                            </div>
+                        </div>
+
+                        <div v-if="errorDelivered.length">
+                            <p v-for="error in errorDelivered" class="mb-4 m-0 p-0" style="color: red">[[ error ]]</p>
+                        </div>
+
+                        <p class="m-0 p-0">Os pedidos só podem ser feitos com 4 (quatro) dias de antecedência. As entregas são feitas de segundas à sábados, a partir das 15:30 até as 19:00. Não entregamos em horários marcados.</p>
+
+                        <div class="btn-box mt-6">
+                            <button @click="backStep1()" class="mr-4">
+                                <i class="fas fa-paw pr-2"></i>
+                                Voltar
+                            </button>
+                            <button @click="checkStep2()" class="ml-4">
+                                <i class="fas fa-paw pr-2"></i>
+                                Continuar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="Step3" class="stepper">
+                    <div class="section">
+                        <h1 class="mt-4">Envio</h1>
+
+                        <p>Selecione sua cidade:</p>
+
+                        <div class="field has-addons has-addons-centered">
+                            <div class="control">
+                                <div class="select">
+                                    <select>
+                                        <option selected>Porto Alegre</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p>Selecione seu bairro: </p>
+
+                        <div class="field has-addons has-addons-centered">
+                            <div class="control">
+                                <div class="select">
+                                    <select @change="applyShipping()" v-model="shipping_code" placeholder="Bairro">
+                                        {% for shipping in shippings %}
+                                            <option value="{{ shipping.place }}">{{ shipping.place }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="errorPlace.length">
+                            <p v-for="error in errorPlace" class="m-0 p-0" style="color: red">[[ error ]]</p>
+                        </div>
+
+                        <p class="mt-6">Digite seu endereço completo:</p>
+
+                        <div class="field has-addons has-addons-centered">
+                            <div class="control has-icons-left"  style="width: 100%">
+                                <input class="input" placeholder="Endereço" name="address" v-model="address">
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-map-marked-alt"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div v-if="errorAdress.length">
+                            <p v-for="error in errorAdress" class="m-0 p-0" style="color: red">[[ error ]]</p>
+                        </div>
+
+                        <div class="field has-addons has-addons-centered">
+                            <div class="control has-icons-left"  style="width: 100%">
+                                <input class="input" v-mask="'##.###-###'" placeholder="CEP" name="zipcode" v-model="zipcode">
+                                <span class="icon is-small is-left">
+                                   <i class="fas fa-map-marker-alt"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div v-if="errorZipcode.length">
+                            <p v-for="error in errorZipcode" class="m-0 p-0" style="color: red">[[ error ]]</p>
+                        </div>
+
+                        <div class="btn-box mt-6">
+                            <button @click="backStep2()" class="mr-4">
+                                <i class="fas fa-paw pr-2"></i>
+                                Voltar
+                            </button>
+                            <button @click="checkStep3()" class="ml-4">
+                                <i class="fas fa-paw pr-2"></i>
+                                Continuar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div id="Step4" class="stepper">
+                    <div class="section">
+                        <h1 class="mt-4">Pedido</h1>
+                        <table id="tableWeb" class="table_wrapper">
+                            <tbody v-for="product in products">
+                                <tr>
+                                    <td colspan="2" class="has-text-left">
+                                        <a class="button" :href="product.url">
+                                            <strong class="mr-2" style="color: #AAA"> [[ product.quantity ]]x </strong>
+                                            <p class="mr-5">[[ product.title ]]</p>
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="has-text-left">
+                                        <button class="pl-0" @click="removeFromCart(product.id)">
+                                            <i class="fas fa-trash fa-xs pr-2" style="display: inline"></i>
+                                            Remover
+                                        </button>
+                                    </td>
+                                    <td class="has-text-right pb-4">
+                                        <p>
+                                            R$ [[ product.total_price | formatQuantity ]]
+                                        </p>
+                                     </td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr v-if="shipping_value">
+                                    <td class="has-text-left">
+                                        <p style="color: #777" class="mb-2">
+                                            Frete para [[shipping_code]]
+                                        </p>
+                                    </td>
+                                    <td class="has-text-right mb-2">
+                                        <p style="color: #777">
+                                            R$ [[ totalCostWithShipping | formatQuantity ]]
+                                        </p>
+                                    </td>
+                                    <td>
+                                        <p></p>
+                                    </td>
+                                </tr>
+                                <tr v-if="coupon_value">
+                                    <td class="has-text-left">
+                                        <p style="color: #777" class="mb-2">
+                                            Desconto de [[coupon_value]]%
+                                        </p>
+                                    </td>
+                                    <td  class="has-text-right mb-2">
+                                        <p style="color: #777">
+                                            - R$ [[ totalCostWithCoupon | formatQuantity ]]
+                                        </p>
+                                    </td>
+                                    <td>
+                                        <p></p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="has-text-left">
+                                        <p><strong style="color: #AAA">TOTAL</strong></p>
+                                    </td>
+                                    <td class="has-text-right">
+                                        <p><strong style="color: #AAA">R$ [[ fullTotalCost | formatQuantity ]]</strong></p>
+                                    </td>
+                                    <td>
+                                        <p></p>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <hr style="color: #AAA">
+
+                        <h1 class="mt-4">Pagamento</h1>
+
+                        <p class="m-0 p-0 pb-6">Olá, <span style="font-weight: 600">[[ first_name ]]</span>! Seu pedido será enviado ao endereço: <span style="font-weight: 600">[[ address ]]</span>. Entraremos em contato pelo número <span style="font-weight: 600">[[ phone ]]</span>, caso seja necessário.</p>
+
+
+                        <p class="m-0 p-0">O pagamento será realizado na hora da entrega. Aceitamos dinheiro, cartões de crédito e débito bandeira <span style="font-weight: 600">MasterCard</span> ou <span style="font-weight: 600">Visa</span>. <span style="font-weight: 600">Não aceitamos o cartão Banricompras</span>.</p>
+
+                        <b-field class="has-addons">
+                            <b-checkbox v-model="check">
+                                Eu concordo com os
+                                <a href="{% url 'mural' %}" style="font-weight: 600">termos de uso</a>
+                                 da Due Gatti
+                            </b-checkbox>
+                        </b-field>
+
+                        <button v-bind:disabled="check === false" v-on:click="buy('cash')" class="button buyButton">
+                            <i class="fas fa-paw pr-2"></i>
+                            <span>Agendar pedido</span>
+                        </button>
+
+                        <div class="btn-box mt-6">
+                            <button @click="backStep3()">
+                                <i class="fas fa-paw pr-2"></i>
+                                Voltar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div v-else>
+                <div id="login">
+                    <div class="contentBox">
+                        <div class="formBox">
+                            <h1>Carrinho</h1>
+                            <p>Seu carrinho está vazio :(</p>
+                        </div>
+                    </div>
+                    <div class="imgBox">
+                        <img src="/media/frontpage/products/11.png" alt="Welcome">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+            <div id="login">
+                <div class="contentBox">
+                    <div class="formBox">
+                        <h1>Carrinho</h1>
+                        <p>Seu carrinho está vazio :(</p>
+                    </div>
+                </div>
+                <div class="imgBox">
+                    <img src="/media/frontpage/products/11.png" alt="Welcome">
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div id="webapp">
+        {% if cart %}
+            <div v-if="products.length > 0"  class="columns">
+                <div class="column is-7">
+
+                    <div id="StepW1" class="stepper">
+                        <h1>Contato</h1>
+                        {% if not request.user.is_authenticated %}
+                            <p class="m-0 mt-2 p-0" style="border-bottom: 2px solid transparent">Continue como convidado ou <a href="{% url 'login' %}" style="color: #4a4a4a; border-bottom: 2px solid #fdc6e1">entre em sua conta.</a></p>
+                        {% endif %}
+
+                        <div class="field has-addons has-addons-centered mt-6">
+                            <div class="control has-icons-left" style="width: 50%">
+                                <input class="input" placeholder="Nome" name="first_name" v-model="first_name">
+                                <span class="icon is-small is-left">
+                                  <i class="fas fa-user"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div v-if="errorName.length">
+                            <p v-for="error in errorName" class="m-0 p-0" style="color: red">[[ error ]]</p>
+                        </div>
+
+                        <div class="field has-addons has-addons-centered">
+                            <div class="control has-icons-left"  style="width: 50%">
+                                <input class="input" type="text" v-mask="'(##) #####-####'" placeholder="Celular" name="phone" v-model="phone">
+                                <span class="icon is-small is-left">
+                                  <i class="fas fa-mobile"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div v-if="errorPhone.length">
+                            <p v-for="error in errorPhone" class="m-0 p-0" style="color: red">[[ error ]]</p>
+                        </div>
+
+                        <div class="field has-addons has-addons-centered">
+                            <div class="control has-icons-left"  style="width: 50%">
+                                <input class="input" type="email" placeholder="E-mail" name="email" v-model="email">
+                                <span class="icon is-small is-left">
+                                  <i class="fas fa-envelope"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div v-if="errorEmail.length">
+                            <p v-for="error in errorEmail" class="m-0 p-0" style="color: red">[[ error ]]</p>
+                        </div>
+
+                        <div class="btn-box mt-6">
+                            <button @click="checkStep1()">
+                                <i class="fas fa-paw pr-2"></i>
+                                Continuar
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <div id="StepW2" class="stepper">
+                        <h1>Entrega</h1>
+
+                        <div class="field">
+                            <div class="control">
+                                <v-date-picker class="inline-block"
+                                    :locale="{ id: 'pt', firstDayOfWeek: 1}"
+                                    :min-date="new Date()"
+                                    :disabled-dates="[{ start: new Date(), span: 4 }, { weekdays: [1] }]"
+                                    :model-config="modelConfig"
+                                    color="pink"
+                                    v-model="delivered_at">
+                                </v-date-picker>
+                            </div>
+                        </div>
+
+                        <div v-if="errorDelivered.length">
+                            <p v-for="error in errorDelivered" class="mb-4 m-0 p-0" style="color: red">[[ error ]]</p>
+                        </div>
+
+                        <p class="m-0 p-0">Os pedidos só podem ser feitos com 4 (quatro) dias de antecedência.</p>
+                        <p class="m-0 p-0">As entregas são feitas de segundas à sábados, a partir das 15:30 até as 19:00.</p>
+                        <p class="m-0 p-0">Não entregamos em horários marcados.</p>
+
+                        <div class="btn-box mt-6">
+                            <button @click="backStep1()" class="mr-4">
+                                <i class="fas fa-paw pr-2"></i>
+                                Voltar
+                            </button>
+                            <button @click="checkStep2()" class="ml-4">
+                                <i class="fas fa-paw pr-2"></i>
+                                Continuar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="StepW3" class="stepper">
+                        <h1>Envio</h1>
+
+                        <p>Selecione sua cidade:</p>
+
+                        <div class="field has-addons has-addons-centered">
+                            <div class="control">
+                                <div class="select">
+                                    <select>
+                                        <option selected>Porto Alegre</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p>Selecione seu bairro: </p>
+
+                        <div class="field has-addons has-addons-centered">
+                            <div class="control">
+                                <div class="select">
+                                    <select @change="applyShipping()" v-model="shipping_code" placeholder="Bairro">
+                                        {% for shipping in shippings %}
+                                            <option value="{{ shipping.place }}">{{ shipping.place }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="errorPlace.length">
+                            <p v-for="error in errorPlace" class="m-0 p-0" style="color: red">[[ error ]]</p>
+                        </div>
+
+                        <p class="mt-6">Digite seu endereço completo:</p>
+
+                        <div class="field has-addons has-addons-centered">
+                            <div class="control has-icons-left"  style="width: 50%">
+                                <input class="input" placeholder="Endereço" name="address" v-model="address">
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-map-marked-alt"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div v-if="errorAdress.length">
+                            <p v-for="error in errorAdress" class="m-0 p-0" style="color: red">[[ error ]]</p>
+                        </div>
+
+                        <div class="field has-addons has-addons-centered">
+                            <div class="control has-icons-left"  style="width: 50%">
+                                <input class="input" v-mask="'##.###-###'" placeholder="CEP" name="zipcode" v-model="zipcode">
+                                <span class="icon is-small is-left">
+                                   <i class="fas fa-map-marker-alt"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div v-if="errorZipcode.length">
+                            <p v-for="error in errorZipcode" class="m-0 p-0" style="color: red">[[ error ]]</p>
+                        </div>
+
+                        <div class="btn-box mt-6">
+                            <button @click="backStep2()" class="mr-4" id="Back2">
+                                <i class="fas fa-paw pr-2"></i>
+                                Voltar
+                            </button>
+                            <button @click="checkStep3()" class="ml-4" id="Next3">
+                                <i class="fas fa-paw pr-2"></i>
+                                Continuar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="StepW4" class="stepper">
+                        <h1>Pagamento</h1>
+
+                        <p class="m-0 p-0 pt-6">Olá, <span style="font-weight: 600">[[ first_name ]]</span>!</p>
+                        <p class="m-0 p-0">Seu pedido será enviado ao endereço: <span style="font-weight: 600">[[ address ]]</span></p>
+                        <p class="m-0 p-0">Entraremos em contato pelo número <span style="font-weight: 600">[[ phone ]]</span>, caso seja necessário.</p>
+                        <p class="m-0 p-0 pt-6">O pagamento será realizado na hora da entrega.</p>
+                        <p class="m-0 p-0">Aceitamos dinheiro, cartões de crédito e débito bandeira <span style="font-weight: 600">MasterCard</span> ou <span style="font-weight: 600">Visa</span>.</p>
+                        <p class="m-0 p-0"><span style="font-weight: 600">Não aceitamos o cartão Banricompras</span>.</p>
+
+                        <b-field class="has-addons has-addons-centered">
+                            <b-checkbox v-model="check">
+                                Eu concordo com os
+                                <a href="{% url 'mural' %}" style="font-weight: 600">termos de uso</a>
+                                 da Due Gatti
+                            </b-checkbox>
+                        </b-field>
+
+                        <button v-bind:disabled="check === false" v-on:click="buy('cash')" class="button buyButton">
+                            <i class="fas fa-paw pr-2"></i>
+                            <span>Agendar pedido</span>
+                        </button>
+
+                        <div class="btn-box mt-6">
+                            <button @click="backStep3()" id="Back3">
+                                <i class="fas fa-paw pr-2"></i>
+                                Voltar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-5" style="background-color: #f3f3f3">
+                    <h1>Carrinho</h1>
+
+                    <table id="tableWeb" class="mt-6">
+                        <tbody v-for="product in products">
+                            <tr>
+                                <td class="has-text-left">
+                                    <a class="button" :href="product.url">
+                                        <strong class="mr-2" style="color: #AAA"> [[ product.quantity ]]x </strong>
+                                        <p class="mr-5">[[ product.title ]]</p>
+                                    </a>
+                                </td>
+                                <td class="has-text-right">
+                                    <p>
+                                        R$ [[ product.total_price | formatQuantity ]]
+                                    </p>
+                                 </td>
+                                 <td>
+                                    <button @click="removeFromCart(product.id)">
+                                        <i class="fas fa-trash fa-xs"></i>
+                                    </button>
+                                 </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr v-if="shipping_value">
+                                <td class="has-text-left">
+                                    <p style="color: #777" class="mb-2">
+                                        Frete para [[shipping_code]]
+                                    </p>
+                                </td>
+                                <td class="has-text-right mb-2">
+                                    <p style="color: #777">
+                                        R$ [[ totalCostWithShipping | formatQuantity ]]
+                                    </p>
+                                </td>
+                                <td>
+                                    <p></p>
+                                </td>
+                            </tr>
+                            <tr v-if="coupon_value">
+                                <td class="has-text-left">
+                                    <p style="color: #777" class="mb-2">
+                                        Desconto de [[coupon_value]]%
+                                    </p>
+                                </td>
+                                <td  class="has-text-right mb-2">
+                                    <p style="color: #777">
+                                        - R$ [[ totalCostWithCoupon | formatQuantity ]]
+                                    </p>
+                                </td>
+                                <td>
+                                    <p></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="has-text-left">
+                                    <p><strong style="color: #AAA">TOTAL</strong></p>
+                                </td>
+                                <td class="has-text-right">
+                                    <p><strong style="color: #AAA">R$ [[ fullTotalCost | formatQuantity ]]</strong></p>
+                                </td>
+                                <td>
+                                    <p></p>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <p class="has-text-left mt-6">Caso tenha um cupom, escreva abaixo:</p>
+                    <div class="field has-addons">
+                        <div class="control has-icons-left">
+                            <input v-on:keyup.enter="applyCoupon()" class="input" style="border: 1px solid #AAA; border-radius: 3.5em" type="text" placeholder="Cupom" v-model="coupon_code">
+                            <span class="icon is-small is-left">
+                              <i class="fas fa-ticket-alt"></i>
+                            </span>
+                        </div>
+                        <div class="control">
+                            <button type="submit" class="button ml-4" @click="applyCoupon()">
+                                <i class="fas fa-paw pr-2"></i>
+                                Aplicar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="is-secondary" v-if="showCouponError">
+                        <p class="has-text-left" style="color: red">O cupom inserido não é valido!</p>
+                    </div>
+
+                    <!--
+                    <h1 class="mt-4">Pagamento</h1>
+
+                    <p class="pb-0 mb-0">Selecione a forma de pagamento:</p>
+                    <div class="columns">
+                        <div class="column is-6 p-0 pr-2">
+                            <button v-on:click="pagamento = 'cash'" class="addButton" style="border-radius: 10px">
+                                <p class="m-0 p-0">Pagamento na entrega</p>
+                                <p class="m-0 p-0" style="color: #AAA">
+                                    Aceitamos dinheiro, cartões de crédito/débito bandeira Mastercard ou Visa.
+                                </p>
+                            </button>
+                        </div>
+                        <div class="column is-6 p-0">
+                            <button v-on:click="pagamento = 'stripe'" class="addButton" style="border-radius: 10px; width: 100%" disabled>
+                                <p class="m-0 p-0">Pagamento online</p>
+                                <p class="m-0 p-0" style="color: #AAA">
+                                    Serviço indisponível no momento.
+                                </p>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="field has-addons mt-6">
+                        <button v-on:click="buy('cash')" class="button is-fullwidth" style="border-radius: 10px; width: 100%">
+                            FAZER O PEDIDO
+                        </button>
+                    </div>
+
+                    -->
+
+                </div>
+
+            </div>
+            <div v-else="">
+                <div id="login">
+                    <div class="contentBox">
+                        <div class="formBox">
+                            <h1>Carrinho</h1>
+                            <p>Seu carrinho está vazio :(</p>
+                        </div>
+                    </div>
+                    <div class="imgBox">
+                        <img src="/media/frontpage/products/11.png" alt="Welcome">
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div id="login">
+                <div class="contentBox">
+                    <div class="formBox">
+                        <h1>Carrinho</h1>
+                        <p>Seu carrinho está vazio :(</p>
+                    </div>
+                </div>
+                <div class="imgBox">
+                    <img src="/media/frontpage/products/11.png" alt="Welcome">
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+    <script src='https://unpkg.com/v-calendar'></script>
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="https://cdn.jsdelivr.net/npm/v-mask/dist/v-mask.min.js"></script>
+    <script>Vue.use(VueMask.VueMaskPlugin)</script>
+    <script>
+        var productapp = new Vue({
+            el: '#cartapp',
+            delimiters: ['[[', ']]'],
+            store: store,
+            data () {
+                return {
+                    errors1: [],
+                    errors2: [],
+                    errors3: [],
+                    errorName: [],
+                    errorEmail: [],
+                    errorAdress: [],
+                    errorZipcode: [],
+                    errorPhone: [],
+                    errorDelivered: [],
+                    errorPlace: [],
+                    first_name: '{{ first_name }}',
+                    last_name: '{{ last_name }}',
+                    email: '{{ email }}',
+                    address: '',
+                    zipcode: '',
+                    place: '',
+                    phone: '',
+                    delivered_at: '',
+                    products: [{{ productsstring|safe }}],
+                    coupon_value: 0,
+                    coupon_code: '',
+                    showCouponError: false,
+                    shipping_value: 0,
+                    shipping_code: '',
+                    pagamento: '',
+                    modelConfig: {
+                        type: 'string',
+                        mask: 'YYYY-MM-DD',
+                    },
+                    check: false,
+                }
+            },
+            filters: {
+                formatQuantity (value) {
+                    let val = (value/1).toFixed(2).replace('.', ',');
+                    return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                }
+            },
+            computed: {
+                numItems: function() {
+                    return store.state.numItems
+                },
+                totalCost: function() {
+                    return store.state.totalCost
+                },
+                totalCostWithCoupon: function() {
+                    if (this.coupon_value > 0) {
+                        return store.state.totalCost - parseFloat(store.state.totalCost * (parseInt(this.coupon_value) / 100));
+                    } else {
+                        return store.state.totalCost;
+                    }
+                },
+                totalCostWithShipping: function() {
+                    if (this.shipping_value > 0) {
+                        return parseInt(this.shipping_value);
+                    } else {
+                        return store.state.totalCost;
+                    }
+                },
+                fullTotalCost: function() {
+                    return store.state.totalCost + parseInt(this.shipping_value) - parseFloat(store.state.totalCost * (parseInt(this.coupon_value) / 100))
+                }
+            },
+            methods: {
+                checkStep0() {
+                    var Step0 = document.getElementById("Step0");
+                    var Step1 = document.getElementById("Step1");
+
+                    Step0.style.display = "none";
+                    Step0.style.visibility = "hidden";
+                    Step1.style.display = "block";
+                    Step1.style.visibility = "visible";
+                },
+                backStep0() {
+                    var Step0 = document.getElementById("Step0");
+                    var Step1 = document.getElementById("Step1");
+
+                    Step0.style.display = "block";
+                    Step0.style.visibility = "visible";
+                    Step1.style.display = "none";
+                    Step1.style.visibility = "hidden";
+                },
+                checkStep1() {
+                    var Step1 = document.getElementById("Step1");
+                    var Step2 = document.getElementById("Step2");
+                    var StepW1 = document.getElementById("StepW1");
+                    var StepW2 = document.getElementById("StepW2");
+
+                    this.errors1 = [];
+                    this.errorName = [];
+                    this.errorEmail = [];
+                    this.errorPhone = [];
+
+                    if (this.first_name === '') {
+                        this.errorName.push('Campo obrigatório.');
+                        this.errors1.push('Preencher')
+                    }
+
+                    if (this.email === '') {
+                        this.errorEmail.push('Campo obrigatório.');
+                        this.errors1.push('Preencher')
+                    }
+
+                    if (this.phone === '') {
+                        this.errorPhone.push('Campo obrigatório.');
+                        this.errors1.push('Preencher')
+                    }
+
+                    if (this.errors1.length === 0) {
+                        Step1.style.display = "none";
+                        Step1.style.visibility = "hidden";
+                        Step2.style.display = "block";
+                        Step2.style.visibility = "visible";
+                        StepW1.style.display = "none";
+                        StepW1.style.visibility = "hidden";
+                        StepW2.style.display = "block";
+                        StepW2.style.visibility = "visible";
+                    }
+                },
+                backStep1() {
+                    var Step1 = document.getElementById("Step1");
+                    var Step2 = document.getElementById("Step2");
+                    var StepW1 = document.getElementById("StepW1");
+                    var StepW2 = document.getElementById("StepW2");
+
+                    Step1.style.display = "block";
+                    Step1.style.visibility = "visible";
+                    Step2.style.display = "none";
+                    Step2.style.visibility = "hidden";
+                    StepW1.style.display = "block";
+                    StepW1.style.visibility = "visible";
+                    StepW2.style.display = "none";
+                    StepW2.style.visibility = "hidden";
+                },
+                checkStep2() {
+                    var Step2 = document.getElementById("Step2");
+                    var Step3 = document.getElementById("Step3");
+                    var StepW2 = document.getElementById("StepW2");
+                    var StepW3 = document.getElementById("StepW3");
+
+                    this.errors2 = [];
+                    this.errorDelivered = [];
+
+                    if (this.delivered_at === '') {
+                        this.errorDelivered.push('Por favor, selecione uma data');
+                        this.errors2.push('Preencher')
+                    }
+
+                    if (this.errors2.length === 0) {
+                        Step2.style.display = "none";
+                        Step2.style.visibility = "hidden";
+                        Step3.style.display = "block";
+                        Step3.style.visibility = "visible";
+                        StepW2.style.display = "none";
+                        StepW2.style.visibility = "hidden";
+                        StepW3.style.display = "block";
+                        StepW3.style.visibility = "visible";
+                    }
+                },
+                backStep2() {
+                    var Step2 = document.getElementById("Step2");
+                    var Step3 = document.getElementById("Step3");
+                    var StepW2 = document.getElementById("StepW2");
+                    var StepW3 = document.getElementById("StepW3");
+                    Step2.style.display = "block";
+                    Step2.style.visibility = "visible";
+                    Step3.style.display = "none";
+                    Step3.style.visibility = "hidden";
+                    StepW2.style.display = "block";
+                    StepW2.style.visibility = "visible";
+                    StepW3.style.display = "none";
+                    StepW3.style.visibility = "hidden";
+                },
+                checkStep3() {
+                    var Step3 = document.getElementById("Step3");
+                    var Step4 = document.getElementById("Step4");
+                    var StepW3 = document.getElementById("StepW3");
+                    var StepW4 = document.getElementById("StepW4");
+
+                    this.errors3 = [];
+                    this.errorAdress = [];
+                    this.errorZipcode = [];
+                    this.errorPlace = [];
+
+                    if (this.shipping_code === '') {
+                        this.errorPlace.push('Campo obrigatório.');
+                        this.errors3.push('Preencher')
+                    }
+
+                    if (this.address === '') {
+                        this.errorAdress.push('Campo obrigatório.');
+                        this.errors3.push('Preencher')
+                    }
+
+                    if (this.zipcode === '') {
+                        this.errorZipcode.push('Campo obrigatório.');
+                        this.errors3.push('Preencher')
+                    }
+
+                    if (this.errors3.length === 0) {
+                        Step3.style.display = "none";
+                        Step3.style.visibility = "hidden";
+                        Step4.style.display = "block";
+                        Step4.style.visibility = "visible";
+                        StepW3.style.display = "none";
+                        StepW3.style.visibility = "hidden";
+                        StepW4.style.display = "block";
+                        StepW4.style.visibility = "visible";
+                    }
+                },
+                backStep3() {
+                    var Step3 = document.getElementById("Step3");
+                    var Step4 = document.getElementById("Step4");
+                    var StepW3 = document.getElementById("StepW3");
+                    var StepW4 = document.getElementById("StepW4");
+
+                    Step3.style.display = "block";
+                    Step3.style.visibility = "visible";
+                    Step4.style.display = "none";
+                    Step4.style.visibility = "hidden";
+                    StepW3.style.display = "block";
+                    StepW3.style.visibility = "visible";
+                    StepW4.style.display = "none";
+                    StepW4.style.visibility = "hidden";
+                },
+                validateForm() {
+                    this.errors = [];
+
+                    if (this.first_name === '') {
+                        this.errors.push('Nome');
+                    }
+
+                    if (this.email === '') {
+                        this.errors.push('E-mail');
+                    }
+
+                    if (this.address === '') {
+                        this.errors.push('Endereço');
+                    }
+
+                    if (this.zipcode === '') {
+                        this.errors.push('CEP');
+                    }
+
+                    if (this.phone === '') {
+                        this.errors.push('Celular');
+                    }
+
+                    if (this.delivered_at === '') {
+                        this.errors.push('Data de entrega');
+                    }
+
+                    if (this.shipping_code === '') {
+                        this.errors.push('Bairro');
+                    }
+
+                    return this.errors.length;
+                },
+                applyShipping() {
+                    if (this.shipping_code !== '') {
+                        fetch('/api/can_ship/?shipping_code=' + this.shipping_code, {
+                            method: 'GET'
+                        })
+                        .then((response) => {
+                            return response.json();
+                        })
+                        .then((data) => {
+                            if (data.amount) {
+                                this.shipping_value = parseInt(data.amount)
+                            } else {
+                                this.shipping_value = 0
+                            }
+                        });
+                    }
+                },
+                applyCoupon() {
+                    if (this.coupon_code !== '') {
+                        fetch('/api/can_use/?coupon_code=' + this.coupon_code, {
+                            method: 'GET'
+                        })
+                        .then((response) => {
+                            return response.json();
+                        })
+                        .then((data) => {
+                            if (data.amount) {
+                                this.coupon_value = parseInt(data.amount)
+                                this.showCouponError = false
+                            } else {
+                                this.coupon_value = 0
+                                this.showCouponError = true
+                            }
+                        });
+                    } else {
+                        this.showCouponError = true
+                    }
+                },
+                buy (gateway) {
+                    var data = {
+                        'first_name': this.first_name,
+                        'last_name': this.last_name,
+                        'email': this.email,
+                        'address': this.address,
+                        'zipcode': this.zipcode,
+                        'place': this.place,
+                        'phone': this.phone,
+                        'delivered_at': this.delivered_at,
+                        'coupon_code': this.coupon_code,
+                        'shipping_code': this.shipping_code,
+                        'gateway': gateway
+                    };
+
+                    if (this.validateForm() === 0) {
+                        console.log(gateway)
+                        if (gateway === 'stripe') {
+                            var stripe = Stripe('{{ pub_key }}');
+
+                            fetch('/api/create_checkout_session/', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': '{{ csrf_token }}'
+                                },
+                                credentials: 'same-origin',
+                                body: JSON.stringify(data)
+                            })
+                            .then(function(response) {
+                                return response.json()
+                            })
+                            .then(function(session) {
+                                return stripe.redirectToCheckout({ sessionId: session.session.id })
+                            })
+                            .then(function(result) {
+                                if (result.error) {
+                                    alert(result.error.message)
+                                }
+                            })
+                            .catch(function(error) {
+                                console.log('Erro: ', error);
+                            });
+                        }
+                        if (gateway == 'cash') {
+                            fetch('/api/create_checkout_session/', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': '{{ csrf_token }}'
+                                },
+                                credentials: 'same-origin',
+                                body: JSON.stringify(data)
+                            })
+                            .then(function(response) {
+                                return response.json()
+                            })
+                            .then(function() {
+                                return location.href="/carrinho/sucesso/"
+                            })
+                            .then(function(result) {
+                                if (result.error) {
+                                    alert(result.error.message)
+                                }
+                            })
+                            .catch(function(error) {
+                                console.log('Erro: ', error);
+                            });
+                        }
+                    }
+                },
+                incrementQuantity(product_id, quantity, price) {
+
+                    for (var i = 0; i < this.products.length; i++) {
+                        var product = this.products[i];
+
+                        if (product.id === product_id) {
+                            if (quantity < product.num_available) {
+                                var data = {
+                                    'product_id': product_id,
+                                    'update': true,
+                                    'quantity': parseInt(quantity) + 1
+                                };
+
+                                store.commit('increment', 1);
+                                store.commit('changeTotalCost', parseFloat(price));
+
+                                fetch('/api/add_to_cart/', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRFToken': '{{ csrf_token }}'
+                                    },
+                                    credentials: 'same-origin',
+                                    body: JSON.stringify(data)
+                                })
+                                .then((response) => {
+                                    for (var i = 0; i < this.products.length; i++) {
+                                        var product = this.products[i];
+
+                                        if (product.id === product_id) {
+                                            this.products[i].quantity = parseInt(this.products[i].quantity) + 1;
+                                            this.products[i].total_price = parseFloat(this.products[i].quantity) * parseFloat(this.products[i].price);
+                                        }
+                                    }
+                                })
+                                .catch(function (error) {
+                                    console.log('Erro: ', error)
+                                })
+                            } else {
+                                alert('Produto não mais disponível em estoque!')
+                            }
+                        }
+                    }
+                },
+                decrementQuantity(product_id, quantity, price) {
+
+                    var data = {
+                        'product_id': product_id,
+                        'update': true,
+                        'quantity': parseInt(quantity) - 1
+                    };
+
+                    if (parseInt(quantity) -1 === 0) {
+                        this.removeFromCart(product_id);
+                    } else {
+
+                      store.commit('increment', - 1);
+                      store.commit('changeTotalCost', -parseFloat(price));
+
+                      fetch('/api/add_to_cart/', {
+                          method: 'POST',
+                          headers: {
+                              'Content-Type': 'application/json',
+                              'X-CSRFToken': '{{ csrf_token }}'
+                          },
+                          credentials: 'same-origin',
+                          body: JSON.stringify(data)
+                      })
+                      .then((response) => {
+
+                          for (var i = 0; i < this.products.length; i++) {
+                              var product = this.products[i];
+
+                              if (product.id === product_id) {
+                                  this.products[i].quantity = parseInt(this.products[i].quantity) - 1
+                                  this.products[i].total_price = parseInt(this.products[i].quantity) * parseFloat(this.products[i].price)
+                              }
+                          }
+                      })
+                      .catch(function (error) {
+                          console.log('Erro :', error);
+                      })
+                    }
+                },
+                removeFromCart(product_id) {
+                    var data = {
+                        'product_id': product_id,
+                    };
+
+                    fetch('/api/remove_from_cart/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify(data)
+                    })
+                    .then((response) => {
+
+                    for (var i = 0; i < this.products.length; i++) {
+                        var product = this.products[i];
+
+                        this.products[i].total_price = parseInt(this.products[i].quantity) * parseFloat(this.products[i].price)
+                    }
+
+                    this.products = this.products.filter(product => product.id !== product_id)
+
+                    })
+                    .catch(function (error) {
+                        console.log('Erro: ', error);
+                    })
+                }
+            }
+        });
+    </script>
+{% endblock %}

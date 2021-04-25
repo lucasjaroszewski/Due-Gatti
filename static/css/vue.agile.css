@@ -1,0 +1,31 @@
+/* Vue Agile CSS */
+
+.agile__nav-button {
+    background: transparent;
+    border: none;
+    color: #fdc6e1;
+    cursor: pointer;
+    font-size: 24px;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    -webkit-transition-duration: 0.3s;
+        transition-duration: 0.3s;
+    width: 80px;
+}
+
+.agile__nav-button--prev {
+    left: 0;
+}
+
+.agile__nav-button--next {
+    right: 0;
+}
+
+@media (max-width: 768px) {
+
+    .agile--no-nav-buttons {
+        visibility: hidden;
+        display: none;
+    }
+}

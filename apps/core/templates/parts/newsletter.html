@@ -1,0 +1,24 @@
+<section class="newsletter">
+    <div id="newsletter-wrapper" class="newsletter-wrapper" >
+        <h2 class="subtitle">Se inscreva para receber novidades da DueGatti!</h2>
+
+        <form v-on:submit.prevent="onSubmit">
+            <div class="field has-addons">
+                <div class="control">
+                    <input type="email" v-model="email" name="email" class="input" placeholder="Insira aqui seu e-mail">
+                </div>
+                <div class="control">
+                    <button class="button is-success">Cadastrar!</button>
+                </div>
+            </div>
+        </form>
+
+        <div v-if="showSuccess">
+            <h2 class="subtitle is-6 pt-4 pb-4" style="color: green">
+                <i class="fas fa-paw" style="color: green"></i>
+                Obrigado! Em breve mandaremos novas novidades fofas pra você!
+                <i class="fas fa-paw" style="color: green"></i>
+            </h2>
+        </div>
+    </div>
+</section>

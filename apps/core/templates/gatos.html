@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %} Gatos - {% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="categoryTitle">
+            <h1>Mural</h1>
+        </div>
+        <div class="columns is-multiline">
+            {% for cat in cats %}
+                <div class="column is-4">
+                    <div class="card">
+                        <div class="card-image">
+                            <figure class="image">
+                                <img src="{{ cat.image.url }}" alt="{{ product.title }}">
+                            </figure>
+                        </div>
+                        <div class="card-content">
+                            <div class="media">
+                                <div class="media-content">
+                                    {% if cat.instagram %}
+                                    <a class="m-0 p-0" href="https://www.instagram.com/{{ cat.instagram }}">
+                                        <p class="m-0 p-0">
+                                            <i class="fab fa-instagram pl-2" style="color: #fdc6e1"></i>
+                                                {{ cat.name }}
+                                        </p>
+                                    </a>
+                                    {% else %}
+                                        <p class="m-0 p-0" style="color: #AAA; cursor: default"> {{ cat.name }} </p>
+                                    {% endif %}
+                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

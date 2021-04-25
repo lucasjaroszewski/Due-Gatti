@@ -1,0 +1,146 @@
+{% extends 'layout.html' %}
+{% load i18n %}
+
+{% block title %} Admin Dashboard - {% endblock %}
+
+{% block content %}
+
+
+<div id="dashboardapp" class="pcoded-content">
+    <div class="pcoded-inner-content">
+        <div class="main-body">
+            <div class="page-wrapper">
+                <div class="row">
+                    <div class="col-xl-12 col-md-12">
+                        <div class="card Recent-Users">
+                            <div class="card-header pb-0">
+                                <div class="row align-items-center justify-content-center">
+                                    <div class="col">
+                                        <h5 class="m-0"><span class="f-20">{{ count_users }}</span> clientes</h5>
+                                        <div class="btn-group float-right">
+                                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <i class="feather icon-file-text f-26 m-r-10"></i>
+                                            </button>
+                                            <div class="dropdown-menu">
+                                                <a class="dropdown-item" href="{% url 'export-csv' %}">Gerar .CSV</a>
+                                                <a class="dropdown-item" href="#!">Gerar .PDF</a>
+                                            </div>
+                                        </div>
+                                        <form action="{% url 'ordered_products' %}" method="get">
+                                            <div class="col-xl-12 px-0">
+                                                <div class="card-block px-0">
+                                                    <div class="row">
+                                                        <div class="col-xl-12">
+                                                            <h3 class="f-w-300 d-flex align-items-center m-b-0">
+                                                                <i class="feather icon-search f-26 m-r-10" style="color: #888"></i>
+                                                                <input class="form-control" type="text" name="query" value="{{ query|title }}" placeholder="Procurar por nome de cliente">
+                                                            </h3>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-block px-0 py-2">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th class="text-center">Cargo</th>
+                                                <th>Usuário</th>
+                                                <th class="text-center">Criado em</th>
+                                                <th class="text-center">Último acesso</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for user in users %}
+                                            <tr class="unread">
+                                                {% language 'pt-br' %}
+                                                {% if user.is_staff == True %}
+                                                    <td><h6 class="m-0 text-center text-c-green"><span style="font-weight: 600">Admin</span></h6></td>
+                                                {% else %}
+                                                    <td><h6 class="m-0 text-center text-c-purple"><span style="font-weight: 600">Cliente</span></h6></td>
+                                                {% endif %}
+
+                                                <td>
+                                                    <h6 style="display: inline">{{ user.username|lower|capfirst }} </h6>
+                                                    <p style="display: inline; vertical-align: center">&#8226; {{ user.email }}</p>
+                                                </td>
+                                                <td><h6 class="text-center">{{ user.date_joined|date:"d / m / Y" }}</h6></td>
+                                                <td><h6 class="text-center">{{ user.last_login|date:"d / m / Y" }}</h6></td>
+                                                {% endlanguage %}
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var dashboardapp = new Vue({
+        el: '#dashboardapp',
+        delimiters: ['[[', ']]'],
+        data () {
+            return {
+
+            }
+        },
+        methods: {
+            statusShipped(order_id) {
+                var data = {
+                    'order_id': order_id,
+                };
+
+            console.log('clicouu')
+            fetch('/api/status_shipped/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(data)
+                })
+                .then((response) => {
+                    location.reload()
+                })
+                .catch(function (error) {
+                    console.log('Erro: ', error);
+                })
+            },
+            statusOrdered(order_id) {
+                var data = {
+                    'order_id': order_id,
+                };
+
+            fetch('/api/status_ordered/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(data)
+                })
+                .then((response) => {
+                    location.reload()
+                })
+                .catch(function (error) {
+                    console.log('Erro: ', error);
+                })
+            }
+        }
+    });
+</script>
+{% endblock %}

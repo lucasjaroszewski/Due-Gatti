@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <!-- Intro -->
+    <section id="intro" class="main style1 dark halfscreen">
+
+    </section>
+
+    <!-- Work -->
+    <section id="products" class="main style3 primary">
+        <div class="content">
+            <header>
+                <h1>Produtos</h1>
+            </header>
+
+            {% if products %}
+            <div class="columns is-multiline is-centered">
+                {% for product in products %}
+                <div class="column">
+                    <div class="card">
+                        <div class="card-image">
+                            <figure class="">
+                                <a href="{% url 'product_detail' product.category.slug product.slug %}">
+                                    <img src="{{ product.image.url }}" alt="{{ product.title }}">
+                                </a>
+                            </figure>
+                        </div>
+                        <div class="card-content">
+                            <div class="media">
+                                <div class="media-content">
+                                    <p class="p-0 m-0 has-text-centered">{{ product.title }}</p>
+                                    <p class="p-0 m-0 has-text-centered" style="color: #AAA">A partir de R$ {{ product.price|floatformat:0 }},00</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <a href="{% url 'products' %}" class="anchors mt-2">
+                <i class="fas fa-paw pr-2"></i>
+                Agende seu pedido
+            </a>
+
+        </div>
+    </section>
+
+    <!-- One -->
+    <section id="one" class="main style2 left dark fullscreen" style="border-bottom: 10px solid white">
+        <div id="mural" class="content box style2">
+            <header>
+                <h1>Mural</h1>
+            </header>
+            <p>
+                Como devem ter percebido, nossa paixão por gatos é imensurável. Quem não se alegra
+                depois de ver uma coisinha tão fofa! <span style="font-weight: 500; color: #999">Veja todos bichanos que deixaram sua marca
+                na Due Gatti!</span>
+            </p>
+            <a href="{% url 'mural' %}" class="anchors mt-2">
+                <i class="fas fa-paw pr-2"></i>
+                Acessar o mural
+            </a>
+        </div>
+    </section>
+
+    <!-- Two -->
+    <section id="two" class="main style2 right dark fullscreen">
+        <div id="mural" class="content box style2">
+            <header>
+                <h1>Contato</h1>
+            </header>
+            <p class="p-0 m-0">Estamos atendendo normalmente</p>
+            <p class="p-0 m-0">E-mail: duegattigc@gmail.com</p>
+            <p>Inscreva-se na nossa catsletter!</p>
+            <form v-on:submit.prevent="onSubmit">
+                <div class="field has-addons">
+                    <div class="control is-expanded">
+                        <input class="input" type="email" v-model="email" name="email" placeholder="E-mail">
+                    </div>
+                    <div class="control">
+                        <button type="submit" class="button">Cadastrar</button>
+                    </div>
+                </div>
+            </form>
+
+            <div v-if="showSuccess">
+                <p style="color: green; margin-top: 0.5rem; margin-bottom: 0">
+                    <i class="fas fa-paw" style="color: #fdc6e1"></i>
+                    Em breve, enviaremos novidades fofas pra você!
+                </p>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block scripts %}
+
+    <script>
+        var two = new Vue({
+            el: '#two',
+            data () {
+                return {
+                    email: '',
+                    showSuccess: false,
+                }
+            },
+            methods: {
+                onSubmit() {
+
+                    fetch('/api/add_subscriber/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({'email': this.email})
+                        })
+                        .then((response) => {
+                            return response.json()
+                        })
+                        .then((data) => {
+                            console.log(data)
+
+                            this.showSuccess = true
+                            this.email = ''
+                        })
+                        .catch(function(error) {
+                            this.showSuccess = false
+                            console.log('Error:', error);
+                        });
+                }
+            }
+        })
+    </script>
+{% endblock %}
