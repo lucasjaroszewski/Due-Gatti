@@ -63,5 +63,6 @@ python manage.py runserver
 ## Author
 
 Lucas Jaroszewski Nunes
+
 https://www.linkedin.com/in/lucasjaroszewski
 
