@@ -9,15 +9,15 @@ Due Gatti is a full stack application for web and mobile. It was built to a well
 
 ## Mobile layout
 <p align="center">
-  <img src="/assets/mobile-4.png" width="300">
-  <img src="/assets/mobile-7.png" width="300">
-  <img src="/assets/mobile-6.png" width="300">
+  <img src="/assets/mobile-4.png" width="250">
+  <img src="/assets/mobile-7.png" width="250">
+  <img src="/assets/mobile-6.png" width="250">
 </p>
 
 ## Web layout
 <p align="center">
-  <img src="/assets/web-3.png" width="450">
-  <img src="/assets/web-4.png" width="450">
+  <img src="/assets/web-3.png" width="380">
+  <img src="/assets/web-4.png" width="380">
 </p>
 
 ## Technologies
